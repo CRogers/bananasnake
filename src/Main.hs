@@ -35,12 +35,12 @@ renderLine game y = map (\x -> renderCell game $ Position x y) [0..(gameWidth ga
 
 render :: Game -> IO ()
 render game = do
-  let foo = map (renderLine game) [0..(gameHeight game - 1)]
-  traverse_ putStrLn foo
+  let rows = map (renderLine game) [0..(gameHeight game - 1)]
+  traverse_ putStrLn rows
+  scrollToFit (length rows)
 
 main :: IO ()
 main = do
-  --render $ Game 4 4 undefined undefined undefined
   turnOffInputBuffering
   (addKeyEvent, fireKey) <- newAddHandler
   network <- compile $ makeNetworkDescription addKeyEvent
@@ -61,7 +61,7 @@ turnOffInputBuffering = do
   hSetEcho stdin False
   hSetBuffering stdin NoBuffering
 
-scroll :: IO ()
-scroll = do
+scrollToFit :: Int -> IO ()
+scrollToFit numLines = do
   (Just (Window h _)) <- size
-  replicateM_ h $ putStrLn ""
+  replicateM_ (h - numLines) $ putStrLn ""
