@@ -24,9 +24,9 @@ snakeHeadPosition :: Behavior t Direction -> Behavior t Position
 snakeHeadPosition bDir = fmap updatePos bDir <*> pure initialPosition
   where updatePos (Direction dir) position = dir + position
 
-snake :: Frameworks t => Event t Char -> Moment t (Behavior t Game)
+snake :: Event t Char -> Behavior t Game
 snake keyEvents = do
   let dir = direction keyEvents
   let headPosition = snakeHeadPosition dir
-  return $ fmap updateGame headPosition
+  fmap updateGame headPosition
     where updateGame position = initialGame { snakeHead = position}
