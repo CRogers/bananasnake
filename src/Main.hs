@@ -19,8 +19,9 @@ main = do
 makeNetworkDescription :: Frameworks t => AddHandler Char -> Moment t ()
 makeNetworkDescription addKeyEvent = do
   keyEvents <- fromAddHandler addKeyEvent
-  game <- changes $ snake keyEvents
-  reactimate' $ fmap render <$> game
+  game <- snake keyEvents
+  gameChanges <- changes game
+  reactimate' $ fmap render <$> gameChanges
 
 turnOffInputBuffering :: IO ()
 turnOffInputBuffering = do

@@ -1,6 +1,7 @@
 module Bananasnake where
 
 import Reactive.Banana
+import Reactive.Banana.Frameworks
 
 import Render
 
@@ -8,10 +9,24 @@ initialPosition = (Position 2 2)
 
 initialGame = Game 10 10 (Position 5 5) [] (Position 4 4)
 
-snakeHeadPosition :: Event t Char -> Behavior t Position
-snakeHeadPosition = accumB initialPosition . fmap updatePos
-  where updatePos key position = position + Position 0 1
+newtype Direction = Direction Position
 
-snake :: Event t Char -> Behavior t Game
-snake keyEvents = fmap updateGame $ snakeHeadPosition keyEvents
-  where updateGame position = initialGame { snakeHead = position}
+up :: Direction
+up = Direction (Position 0 1)
+
+turnClockwise :: Direction -> Direction
+turnClockwise (Direction (Position x y)) = Direction (Position (negate y) (negate x))
+
+direction :: Event t Char -> Behavior t Direction
+direction = accumB up . fmap (const turnClockwise)
+
+snakeHeadPosition :: Behavior t Direction -> Behavior t Position
+snakeHeadPosition bDir = fmap updatePos bDir <*> pure initialPosition
+  where updatePos (Direction dir) position = dir + position
+
+snake :: Frameworks t => Event t Char -> Moment t (Behavior t Game)
+snake keyEvents = do
+  let dir = direction keyEvents
+  let headPosition = snakeHeadPosition dir
+  return $ fmap updateGame headPosition
+    where updateGame position = initialGame { snakeHead = position}
