@@ -1,13 +1,46 @@
 module Main where
 
 import Control.Monad (replicateM_, forever)
+import Data.Foldable (traverse_)
+import Data.List (intersperse)
 import Reactive.Banana
 import Reactive.Banana.Frameworks
 import System.Console.Terminal.Size (size, Window(..))
 import System.IO (BufferMode(..), hSetEcho, hSetBuffering, stdin)
 
+type X = Int
+type Y = Int
+data Position = Position X Y deriving (Show, Eq)
+
+type Width = Int
+type Height = Int
+
+data Game = Game {
+  gameWidth :: Width,
+  gameHeight :: Height,
+  snakeHead :: Position,
+  snakeTail :: [Position],
+  food :: Position
+}
+
+renderCell :: Game -> Position -> Char
+renderCell game pos
+  | snakeHead game == pos = '@'
+  | elem pos (snakeTail game) = '#'
+  | food game == pos = '~'
+  | otherwise = '·'
+
+renderLine :: Game -> Y -> String
+renderLine game y = map (\x -> renderCell game $ Position x y) [0..(gameWidth game - 1)]
+
+render :: Game -> IO ()
+render game = do
+  let foo = map (renderLine game) [0..(gameHeight game - 1)]
+  traverse_ putStrLn foo
+
 main :: IO ()
 main = do
+  --render $ Game 4 4 undefined undefined undefined
   turnOffInputBuffering
   (addKeyEvent, fireKey) <- newAddHandler
   network <- compile $ makeNetworkDescription addKeyEvent
