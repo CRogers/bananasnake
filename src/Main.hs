@@ -1,43 +1,12 @@
 module Main where
 
-import Control.Monad (replicateM_, forever)
-import Data.Foldable (traverse_)
-import Data.List (intersperse)
+import Control.Monad (forever)
 import Reactive.Banana
 import Reactive.Banana.Frameworks
-import System.Console.Terminal.Size (size, Window(..))
 import System.IO (BufferMode(..), hSetEcho, hSetBuffering, stdin)
 
-type X = Int
-type Y = Int
-data Position = Position X Y deriving (Show, Eq)
-
-type Width = Int
-type Height = Int
-
-data Game = Game {
-  gameWidth :: Width,
-  gameHeight :: Height,
-  snakeHead :: Position,
-  snakeTail :: [Position],
-  food :: Position
-}
-
-renderCell :: Game -> Position -> Char
-renderCell game pos
-  | snakeHead game == pos = '@'
-  | elem pos (snakeTail game) = '#'
-  | food game == pos = '~'
-  | otherwise = '·'
-
-renderLine :: Game -> Y -> String
-renderLine game y = map (\x -> renderCell game $ Position x y) [0..(gameWidth game - 1)]
-
-render :: Game -> IO ()
-render game = do
-  let rows = map (renderLine game) [0..(gameHeight game - 1)]
-  traverse_ putStrLn rows
-  scrollToFit (length rows)
+import Render
+import Bananasnake
 
 main :: IO ()
 main = do
@@ -50,18 +19,10 @@ main = do
 makeNetworkDescription :: Frameworks t => AddHandler Char -> Moment t ()
 makeNetworkDescription addKeyEvent = do
   keyEvents <- fromAddHandler addKeyEvent
-  numberOfKeyPresses <- changes $ eventCounter keyEvents
-  reactimate' $ fmap (putStrLn . show) <$> numberOfKeyPresses
-
-eventCounter :: Event t a -> Behavior t Int
-eventCounter = accumB 0 . fmap (const (+1))
+  game <- changes $ snake keyEvents
+  reactimate' $ fmap render <$> game
 
 turnOffInputBuffering :: IO ()
 turnOffInputBuffering = do
   hSetEcho stdin False
   hSetBuffering stdin NoBuffering
-
-scrollToFit :: Int -> IO ()
-scrollToFit numLines = do
-  (Just (Window h _)) <- size
-  replicateM_ (h - numLines) $ putStrLn ""
