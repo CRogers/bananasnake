@@ -20,8 +20,16 @@ left =  Direction (Position (-1) 0)
 turnClockwise :: Direction -> Direction
 turnClockwise (Direction (Position x y)) = Direction (Position y (negate x))
 
+turnAnticlockwise :: Direction -> Direction
+turnAnticlockwise (Direction (Position x y)) = Direction (Position (negate y) x)
+
 direction :: Event t Char -> Event t Direction
-direction = accumE up . fmap (const turnClockwise)
+direction = accumE up . fmap turn
+  where
+    turn :: Char -> Direction -> Direction
+    turn 'a' = turnAnticlockwise
+    turn 'd' = turnClockwise
+    turn _ = id
 
 snakeHeadPosition :: Event t Direction -> Event t Position
 snakeHeadPosition = accumE initialPosition . fmap updatePos
