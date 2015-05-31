@@ -31,6 +31,15 @@ direction = accumE up . fmap turn
     turn 'd' = turnClockwise
     turn _ = id
 
+sampledBy :: Event t a -> Event t b -> Event t (Maybe b)
+sampledBy as bs = apply mapAToB as
+  where
+    --lastB :: Behavior t (Maybe b)
+    lastB = stepper Nothing (fmap Just bs)
+
+    --mapAToB :: Behavior t (a -> Maybe b)
+    mapAToB = fmap const lastB
+
 snakeHeadPosition :: Event t Direction -> Event t Position
 snakeHeadPosition = accumE initialPosition . fmap updatePos
   where updatePos (Direction dir) position = dir + position
