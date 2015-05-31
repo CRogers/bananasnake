@@ -16,10 +16,15 @@ main = do
   actuate network
   forever (getChar >>= fireKey)
 
+maybeToIO :: (a -> IO ()) -> Maybe a -> IO ()
+maybeToIO _ Nothing = return ()
+maybeToIO f (Just a) = f a
+
 makeNetworkDescription :: Frameworks t => AddHandler Char -> Moment t ()
 makeNetworkDescription addKeyEvent = do
   keyEvents <- fromAddHandler addKeyEvent
-  reactimate $ fmap render $ snake keyEvents
+  game <- changes $ snake keyEvents
+  reactimate' $ fmap (fmap (maybeToIO render)) game
 
 turnOffInputBuffering :: IO ()
 turnOffInputBuffering = do
