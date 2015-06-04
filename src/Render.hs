@@ -14,12 +14,15 @@ instance Num Position where
 type Width = Int
 type Height = Int
 
+type FoodPosition = Position
+type HeadPosition = Position
+
 data Game = Game {
   gameWidth :: Width,
   gameHeight :: Height,
-  snakeHead :: Position,
+  snakeHead :: HeadPosition,
   snakeTail :: [Position],
-  food :: Position
+  food :: FoodPosition
 }
 
 renderCell :: Game -> Position -> Char

@@ -5,9 +5,8 @@ import Reactive.Banana.Frameworks
 
 import Render
 
-initialPosition = (Position 3 3)
-
-initialGame = Game 10 10 (Position 5 5) [] (Position 4 4)
+initialPosition = Position 3 3
+initialFoodPosition = Position 5 5
 
 newtype Direction = Direction Position deriving (Show, Eq)
 
@@ -53,22 +52,20 @@ snakeHeadPosition :: Event t Direction -> Event t Position
 snakeHeadPosition = accumE initialPosition . fmap updatePos
   where updatePos (Direction dir) position = dir + position
 
-combine :: (a -> b -> c) -> Event t a -> Event t b -> Behavior t (Maybe c)
-combine f ea eb = fmap (liftA2 f) ba <*> bb
+foodPosition :: Event t HeadPosition -> Event t FoodPosition
+foodPosition = accumE initialFoodPosition . fmap move
   where
-    ba = stepper Nothing (fmap Just ea)
-    bb = stepper Nothing (fmap Just eb)
+    move headPos foodPos
+      | headPos == foodPos = Position 1 1
+      | otherwise = foodPos
 
-snake :: Event t Char -> Behavior t (Maybe Game)
+snake :: Event t Char -> Behavior t Game
 snake keyEvents = do
   let dir = direction keyEvents
   let directionOnUp = sampledBy (ups keyEvents) dir
   let headPosition = snakeHeadPosition directionOnUp
   let tailPositions = slidingWindow 6 headPosition
-  combine blah headPosition tailPositions
-  where
-    blah :: Position -> [Position] -> Game
-    blah headPos tailPos = initialGame {
-      snakeHead = headPos,
-      snakeTail = tailPos
-    }
+  Game <$> pure 10 <*> pure 10
+    <*> stepper initialPosition headPosition
+    <*> stepper [] tailPositions
+    <*> pure initialFoodPosition
