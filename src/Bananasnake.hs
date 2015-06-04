@@ -68,4 +68,4 @@ snake keyEvents = do
   Game <$> pure 10 <*> pure 10
     <*> stepper initialPosition headPosition
     <*> stepper [] tailPositions
-    <*> pure initialFoodPosition
+    <*> stepper initialFoodPosition (foodPosition headPosition)
