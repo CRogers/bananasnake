@@ -8,6 +8,9 @@ import Render
 initialPosition = Position 3 3
 initialFoodPosition = Position 5 5
 
+width = 10
+height = 10
+
 newtype Direction = Direction Position deriving (Show, Eq)
 
 up :: Direction
@@ -49,15 +52,22 @@ slidingWindow size = accumE [] . fmap sw
     sw a as = take size (a : as)
 
 snakeHeadPosition :: Event t Direction -> Event t Position
-snakeHeadPosition = accumE initialPosition . fmap updatePos
+snakeHeadPosition dirs = accumE initialPosition (fmap updatePos dirs)
   where updatePos (Direction dir) position = dir + position
 
 foodPosition :: Event t HeadPosition -> Event t FoodPosition
 foodPosition = accumE initialFoodPosition . fmap move
   where
     move headPos foodPos
-      | headPos == foodPos = Position 1 1
+      | headPos == foodPos = foodPos + Position 1 1
       | otherwise = foodPos
+
+counter :: Eq a => Event t a -> Event t Int
+counter stream = accumE 0 $ fmap step (slidingWindow 2 stream)
+  where
+    --step :: [a] -> Int -> Int
+    step [_] count = count + 1
+    step [x, y] count = if x == y then count else count + 1
 
 snake :: Event t Char -> Behavior t Game
 snake keyEvents = do
@@ -65,7 +75,7 @@ snake keyEvents = do
   let directionOnUp = sampledBy (ups keyEvents) dir
   let headPosition = snakeHeadPosition directionOnUp
   let tailPositions = slidingWindow 6 headPosition
-  Game <$> pure 10 <*> pure 10
+  Game <$> pure width <*> pure height
     <*> stepper initialPosition headPosition
     <*> stepper [] tailPositions
     <*> stepper initialFoodPosition (foodPosition headPosition)

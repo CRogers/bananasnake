@@ -7,12 +7,16 @@ import System.Console.Terminal.Size (size, Window(..))
 type X = Int
 type Y = Int
 data Position = Position X Y deriving (Show, Eq)
+data Rectangle = Rectangle Width Height
 
 instance Num Position where
   (Position x y) + (Position x' y') = Position (x + x') (y + y')
 
 type Width = Int
 type Height = Int
+
+modulo :: Rectangle -> Position -> Position
+modulo (Rectangle w h) (Position x y) = Position (x `mod` w) (y `mod` h)
 
 type FoodPosition = Position
 type HeadPosition = Position
