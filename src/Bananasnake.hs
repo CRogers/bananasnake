@@ -62,12 +62,18 @@ foodPosition = accumE initialFoodPosition . fmap move
       | headPos == foodPos = foodPos + Position 1 1
       | otherwise = foodPos
 
-counter :: Eq a => Event t a -> Event t Int
-counter stream = accumE 0 $ fmap step (slidingWindow 2 stream)
+isChange :: Eq a => Event t a -> Event t Bool
+isChange stream = accumE True $ fmap areUnequal (slidingWindow 2 stream)
   where
-    --step :: [a] -> Int -> Int
-    step [_] count = count + 1
-    step [x, y] count = if x == y then count else count + 1
+    --areUnequal :: [a] -> Bool -> Bool
+    areUnequal [_] _ = True
+    areUnequal [x, y] _ = if x == y then False else True
+
+countChanges :: Eq a => Event t a -> Event t Int
+countChanges stream = accumE 0 $ fmap countIfTrue (isChange stream)
+  where
+    --countIfTrue :: Bool -> Int -> Int
+    countIfTrue b count = if b then count + 1 else count
 
 snake :: Event t Char -> Behavior t Game
 snake keyEvents = do
