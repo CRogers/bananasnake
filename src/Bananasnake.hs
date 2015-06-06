@@ -72,26 +72,18 @@ foodPosition = accumE initialFoodPosition . fmap move
       | headPos == foodPos = foodPos + Position 1 1
       | otherwise = foodPos
 
-isChange :: Eq a => Event t a -> Event t Bool
-isChange stream = accumE True $ fmap areUnequal (slidingWindow 2 stream)
-  where
-    --areUnequal :: [a] -> Bool -> Bool
-    areUnequal [_] _ = True
-    areUnequal [x, y] _ = if x == y then False else True
-
-countChanges :: Eq a => Event t a -> Event t Int
-countChanges stream = accumE 0 $ fmap countIfTrue (isChange stream)
-  where
-    --countIfTrue :: Bool -> Int -> Int
-    countIfTrue b count = if b then count + 1 else count
+isOnTopOfFood :: Event t FoodPosition -> Behavior t (HeadPosition -> Bool)
+isOnTopOfFood foodPosition = stepper (const False) (fmap (==) foodPosition)
 
 snake :: Event t Char -> Behavior t Game
 snake keyEvents = do
   let dir = direction keyEvents
   let directionOnUp = sampledBy (ups keyEvents) dir
   let headPosition = snakeHeadPosition directionOnUp
-  let tailPositions = slidingWindow 6 headPosition
+  let foodPos = foodPosition headPosition
+  let isOnFood = isOnTopOfFood foodPos
+  let tailPositions = slidingWindowBy isOnFood headPosition
   Game <$> pure width <*> pure height
     <*> stepper initialPosition headPosition
     <*> stepper [] tailPositions
-    <*> stepper initialFoodPosition (foodPosition headPosition)
+    <*> stepper initialFoodPosition foodPos
