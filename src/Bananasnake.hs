@@ -51,6 +51,16 @@ slidingWindow size = accumE [] . fmap sw
     sw :: a -> [a] -> [a]
     sw a as = take size (a : as)
 
+slidingWindowBy :: Behavior t (a -> Bool) -> Event t a -> Event t [a]
+slidingWindowBy shouldIncrease as = accumE [] $ fmap step (apply valueAndShouldIncrease as)
+  where
+    --thing :: Behavior t (a -> (a, Bool))
+    valueAndShouldIncrease = fmap (\predicate a -> (a, predicate a)) shouldIncrease
+
+    --step :: (a, Bool) -> [a] -> [a]
+    step (a, False) as = tail (as ++ [a])
+    step (a, True) as = as ++ [a]
+
 snakeHeadPosition :: Event t Direction -> Event t Position
 snakeHeadPosition dirs = accumE initialPosition (fmap updatePos dirs)
   where updatePos (Direction dir) position = dir + position
