@@ -9,8 +9,5 @@ Setup
 ---
 
 1. Clone this git repo
-2. Recommended if you have no haskell setup:
-  1. [Install nix](https://nixos.org/nix/)
-  2. Run `nix-shell`. Wait a possibly long time.
-  3. Run `cabal repl` to open the repl (the `:main` to start) or `cabal run` to run it directly.
-3. Or `cabal sandbox init`, `cabal install --only-dependencies`, `cabal run`.
+2. Download [Stack](https://github.com/commercialhaskell/stack).
+3. Run `stack setup`, `stack ghci`, then type `main`.
